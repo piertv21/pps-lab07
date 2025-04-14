@@ -42,8 +42,51 @@ class LoggingRobot(val robot: Robot) extends Robot:
     robot.act()
     println(robot.toString)
 
+class RobotWithBattery(val robot: Robot) extends Robot:
+  export robot.{position, direction}
+  private var battery: Int = 100
+  override def turn(dir: Direction): Unit =
+    if battery > 0 then
+      robot.turn(dir)
+      battery -= 1
+      println(toString)
+  override def act(): Unit =
+    if battery > 0 then
+      robot.act()
+      battery -= 1
+      println(toString)
+  override def toString: String = s"${robot.toString} (Battery: $battery%)"
+
+class RobotCanFail(val robot: Robot, val probabilityCanFail: Double) extends Robot:
+  export robot.{position, direction}
+  override def turn(dir: Direction): Unit =
+    if scala.util.Random.nextDouble() > probabilityCanFail then
+      robot.turn(dir)
+      println(toString)
+    else
+      println("Robot failed to turn")
+  override def act(): Unit =
+    if scala.util.Random.nextDouble() > probabilityCanFail then
+      robot.act()
+      println(toString)
+    else
+      println("Robot failed to act")
+  override def toString: String = s"${robot.toString} (Can fail)"
+
+class RobotRepeated(val robot: Robot, val numberOfTimes: Int) extends Robot:
+  export robot.{position, direction}
+  override def turn(dir: Direction): Unit =
+    for _ <- 1 to numberOfTimes do
+      robot.turn(dir)
+      println(toString)
+  override def act(): Unit =
+    for _ <- 1 to numberOfTimes do
+      robot.act()
+      println(toString)
+  override def toString: String = s"${robot.toString} (Repeated $numberOfTimes times)"
+
 @main def testRobot(): Unit =
-  val robot = LoggingRobot(SimpleRobot((0, 0), Direction.North))
+  val robot = RobotRepeated(SimpleRobot((0, 0), Direction.North), 2)
   robot.act() // robot at (0, 1) facing North
   robot.turn(robot.direction.turnRight) // robot at (0, 1) facing East
   robot.act() // robot at (1, 1) facing East
